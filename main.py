@@ -1,16 +1,24 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from Afd import Afd
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def read_file(file_name: str):
+    try:
+        with open(file_name, 'r') as file:
+            content = file.readlines()
+        return content
+    except FileNotFoundError:
+        raise FileNotFoundError(f'O arquivo "{file_name}" não foi encontrado.')
 
 
-# Press the green button in the gutter to run the script.
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    automato = Afd()
+    content = read_file('exemple.txt')
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    automato.load_afd(content)
+    print(automato.states)
+    print(automato.alphabet)
+    print(automato.transctions)
+    print(automato.inital)
+    print(automato.finals)
+
