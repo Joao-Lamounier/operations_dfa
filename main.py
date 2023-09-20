@@ -21,9 +21,30 @@ if __name__ == '__main__':
     automato = Afd()
     content = read_file('exemple.txt')
 
-    automato.load_afd(content)
-    write_file('exemple1.txt', automato.convert_format_file())
-    cadeia = '1'
+    # automato.load_afd(content)
+    # write_file('exemple1.txt', automato.convert_format_file())
+
+    automato.create_state(1, True)
+    automato.create_state(2, False, True)
+    automato.create_state(3)
+    automato.create_state(4)
+    automato.create_state(5)
+    automato.create_state(6, False, True)
+    automato.create_alphabet('0 1')
+    automato.create_transition(1,0,2)
+    automato.create_transition(1,1,3)
+    automato.create_transition(2,0,2)
+    automato.create_transition(2,1,3)
+    automato.create_transition(3,0,5)
+    automato.create_transition(3,1,4)
+    automato.create_transition(4,0,1)
+    automato.create_transition(4,1,3)
+    automato.create_transition(5,0,6)
+    automato.create_transition(5,1,4)
+    automato.create_transition(6,0,2)
+    automato.create_transition(6,1,4)
+
+    cadeia = '0'
     state = automato.start(cadeia)
 
     if automato.is_final(state) and not automato.error():

@@ -40,6 +40,9 @@ class Afd:
         self.transitions[origin, symbol] = destin
         return True
 
+    def create_alphabet(self, alphabet):
+        self.alphabet = str(alphabet)
+
     def is_final(self, id) -> bool:
         return id in self.finals
 
