@@ -92,8 +92,8 @@ class Afd:
     def copy(self):
         return copy.deepcopy(self)
 
-    def __trivially_valid__(self, afd_dict: dict):
-
+    def __trivially_valid__(self):
+        afd_dict = dict()
         states_list = list(self.states)
         for i in range(1, len(states_list)):
             for j in range(0, i):
@@ -101,58 +101,58 @@ class Afd:
                     afd_dict[i, j] = False
                 else:
                     afd_dict[i, j] = None
+        return afd_dict
 
     def equivalent_states(self):
-        mini = dict()
+        afd_dict = self.__trivially_valid__()
         states_list = list(self.states)
-        # Trivialmente válidos
-        for i in range(1, len(states_list)):
-            for j in range(0, i):
-                if self.is_final(states_list[i]) != self.is_final(states_list[j]):
-                    mini[i, j] = False
-                else:
-                    mini[i, j] = None
 
         pendent = True
-        while pendent:
+        change = False
+        while pendent and not change:
+            change = True
             pendent = True
             for i in range(1, len(states_list)):
+                equal = True
                 for j in range(0, i):
-                    if mini[i, j] is None:
+                    if afd_dict[i, j] is None or afd_dict[i, j] == 'pendent':
                         pendent = False
                         parts = self.alphabet.split()
-                        equal = True
                         for part in parts:
-                            row = self.transitions[i + 1, part]
-                            col = self.transitions[j + 1, part]
+                            row = self.transitions[i + 1, part] - 1
+                            col = self.transitions[j + 1, part] - 1
                             if col > row:
-                                aux = col
-                                col = row
-                                row = aux
-                            print(row, col)
-                            print(part)
-                            print('-----')
-                            row -= 1
-                            col -= 1
-                            if col != row and mini[row, col] is False:
+                                col, row = row, col
+
+                            if col != row and afd_dict[row, col] is False:
                                 equal = False
-                                mini[i, j] = False
+                                change = False
+                                afd_dict[i, j] = False
                                 break
-                            if col != row and mini[row, col] is None:
+                            elif col != row and (afd_dict[row, col] is None or afd_dict[row, col] == 'pendent'):
                                 equal = False
-                                mini[i, j] = 'pendent'
-                                break
-                            if col != row and mini[row, col] is 'pendent':
-                                equal = False
-                                mini[i, j] = 'pendent'
+                                change = False
+                                afd_dict[i, j] = 'pendent'
                                 break
                         if equal:
-                            print('Insert')
-                            mini[i, j] = True
-        for i in range(1, len(states_list)):
+                            change = False
+                            afd_dict[i, j] = True
+        self.not_marked(afd_dict)
+        return afd_dict
+
+    def not_marked(self, afd_dict):
+        for i in range(1, len(list(self.states))):
             for j in range(0, i):
-                if mini[i, j] is 'pendent':
-                    mini[i, j] = True
-                print(mini[i, j], end=" ")
+                if afd_dict[i, j] == 'pendent':
+                    afd_dict[i, j] = True
+
+    def print_dict(self, afd_dict):
+        for i in range(1, len(list(self.states))):
+            for j in range(0, i):
+                print(afd_dict[i, j], end=" ")
             print()
+
+
+
+
 
