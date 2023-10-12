@@ -174,39 +174,34 @@ class Afd:
     def is_equivalent(self, afd):
         alphabet1 = self.alphabet.split()
         alphabet2 = afd.alphabet.split()
+
         if len(set(alphabet1).symmetric_difference(alphabet2)) != 0:
             return self.comparison_status.INEQUIVALENT.name
 
         afd_concat = Afd()
         afd_concat.create_alphabet(self.alphabet)
         size = len(list(self.states))
-        backup = dict()
-        x, y = 0, 0
 
-        for i, state in enumerate(self.states):
-            afd_concat.create_state(i + 1, final=self.is_final(state))
-            backup[state] = i + 1
-            if self.initial == state:
-                x = backup[self.initial]
-
-        for i, state in enumerate(self.states):
-            for symbol in alphabet1:
-                destin = backup[self.transitions[(state, symbol)]]
-                afd_concat.create_transition(i + 1, symbol, destin)
-
-        backup = dict()
-
-        for i, state in enumerate(afd.states):
-            afd_concat.create_state(i + size, final=afd.is_final(state))
-            backup[state] = i + size
-            if afd.initial == state:
-                y = backup[afd.initial]
-
-        for i, state in enumerate(afd.states):
-            for symbol in alphabet2:
-                destin = backup[afd.transitions[(state, symbol)]]
-                afd_concat.create_transition(i + size, symbol, destin)
+        x = self.__rename_states(afd_concat, self, 1)
+        y = self.__rename_states(afd_concat, afd, size)
 
         equivalences = afd_concat.equivalent_states()
 
         return equivalences[y, x].name
+
+    @staticmethod
+    def __rename_states(afd1, afd2, prefix=0):
+        x = 0
+        backup = dict()
+        for i, state in enumerate(afd2.states):
+            afd1.create_state(i + prefix, final=afd2.is_final(state))
+            backup[state] = i + prefix
+            if afd2.initial == state:
+                x = backup[afd2.initial]
+
+        for i, state in enumerate(afd2.states):
+            for symbol in afd2.alphabet.split():
+                destin = backup[afd2.transitions[(state, symbol)]]
+                afd1.create_transition(i + prefix, symbol, destin)
+
+        return x
