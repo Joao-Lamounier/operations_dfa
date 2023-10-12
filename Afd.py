@@ -109,7 +109,7 @@ class Afd:
         for i in range(1, len(states_list)):
             for j in range(0, i):
                 if self.is_final(states_list[i]) != self.is_final(states_list[j]):
-                    afd_dict[i, j] = self.comparison_status.INEQUIVALENT.value
+                    afd_dict[i, j] = self.comparison_status.INEQUIVALENT
                 else:
                     afd_dict[i, j] = None
         return afd_dict
@@ -127,7 +127,7 @@ class Afd:
             for i in range(1, len(states_list)):
                 equal = True
                 for j in range(0, i):
-                    if afd_dict[i, j] is None or afd_dict[i, j] == cs.PENDENT.value:
+                    if afd_dict[i, j] is None or afd_dict[i, j] == cs.PENDENT:
                         pendent = False
                         parts = self.alphabet.split()
                         for part in parts:
@@ -136,27 +136,27 @@ class Afd:
                             if col > row:
                                 col, row = row, col
 
-                            if col != row and afd_dict[row, col] is cs.INEQUIVALENT.value:
+                            if col != row and afd_dict[row, col] is cs.INEQUIVALENT:
                                 equal = False
                                 change = False
-                                afd_dict[i, j] = cs.INEQUIVALENT.value
+                                afd_dict[i, j] = cs.INEQUIVALENT
                                 break
-                            elif col != row and (afd_dict[row, col] is None or afd_dict[row, col] == cs.PENDENT.value):
+                            elif col != row and (afd_dict[row, col] is None or afd_dict[row, col] == cs.PENDENT):
                                 equal = False
                                 change = False
-                                afd_dict[i, j] = cs.PENDENT.value
+                                afd_dict[i, j] = cs.PENDENT
                                 break
                         if equal:
                             change = False
-                            afd_dict[i, j] = cs.EQUIVALENT.value
+                            afd_dict[i, j] = cs.EQUIVALENT
         self.not_marked(afd_dict)
         return afd_dict
 
     def not_marked(self, afd_dict):
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
-                if afd_dict[i, j] == self.comparison_status.PENDENT.value:
-                    afd_dict[i, j] = self.comparison_status.EQUIVALENT.value
+                if afd_dict[i, j] == self.comparison_status.PENDENT:
+                    afd_dict[i, j] = self.comparison_status.EQUIVALENT
 
     def print_dict(self, afd_dict):
         for i in range(1, len(list(self.states))):
@@ -171,7 +171,42 @@ class Afd:
                     print(afd_dict[i, j], end=" ")
             print()
 
+    def is_equivalent(self, afd):
+        alphabet1 = self.alphabet.split()
+        alphabet2 = afd.alphabet.split()
+        if len(set(alphabet1).symmetric_difference(alphabet2)) != 0:
+            return self.comparison_status.INEQUIVALENT.name
 
+        afd_concat = Afd()
+        afd_concat.create_alphabet(self.alphabet)
+        size = len(list(self.states))
+        backup = dict()
+        x, y = 0, 0
 
+        for i, state in enumerate(self.states):
+            afd_concat.create_state(i + 1, final=self.is_final(state))
+            backup[state] = i + 1
+            if self.initial == state:
+                x = backup[self.initial]
 
+        for i, state in enumerate(self.states):
+            for symbol in alphabet1:
+                destin = backup[self.transitions[(state, symbol)]]
+                afd_concat.create_transition(i + 1, symbol, destin)
 
+        backup = dict()
+
+        for i, state in enumerate(afd.states):
+            afd_concat.create_state(i + size, final=afd.is_final(state))
+            backup[state] = i + size
+            if afd.initial == state:
+                y = backup[afd.initial]
+
+        for i, state in enumerate(afd.states):
+            for symbol in alphabet2:
+                destin = backup[afd.transitions[(state, symbol)]]
+                afd_concat.create_transition(i + size, symbol, destin)
+
+        equivalences = afd_concat.equivalent_states()
+
+        return equivalences[y, x].name

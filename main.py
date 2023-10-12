@@ -20,44 +20,48 @@ def write_file(file_name: str, content: str):
 
 if __name__ == '__main__':
     automato = Afd()
+    automato2 = Afd()
     content = read_file('exemple.txt')
 
-    automato.load_afd(content)
-    write_file('exemple1.txt', automato.convert_format_file())
+    # automato.load_afd(content)
+    # write_file('exemple1.txt', automato.convert_format_file())
 
-    # automato.create_state(1, True)
-    # automato.create_state(2, False, True)
-    # automato.create_state(3)
-    # automato.create_state(4)
-    # automato.create_state(5)
-    # automato.create_state(6, False, True)
-    # automato.create_alphabet('0 1')
-    # automato.create_transition(1, 0, 2)
-    # automato.create_transition(1, 1, 3)
-    # automato.create_transition(2, 0, 2)
-    # automato.create_transition(2, 1, 3)
-    # automato.create_transition(3, 0, 5)
-    # automato.create_transition(3, 1, 4)
-    # automato.create_transition(4, 0, 1)
-    # automato.create_transition(4, 1, 3)
-    # automato.create_transition(5, 0, 6)
-    # automato.create_transition(5, 1, 4)
-    # automato.create_transition(6, 0, 2)
-    # automato.create_transition(6, 1, 4)
+    automato.create_state(1, initial=True)
+    automato.create_state(2, final=True)
 
-    cadeia = '0'
-    state = automato.start(cadeia)
+    automato.create_alphabet('a b')
+    automato.create_transition(1, 'a', 2)
+    automato.create_transition(1, 'b', 1)
+    automato.create_transition(2, 'a', 1)
+    automato.create_transition(2, 'b', 2)
 
-    if automato.is_final(state) and not automato.error():
-        print('aceitou')
-    else:
-        print('rejeitou')
+    automato2.create_alphabet('a b')
+    automato2.create_state(3, initial=True)
+    automato2.create_state(4, final=True)
+    automato2.create_state(5)
 
-    print(automato)
-    automato.print_dict(automato.equivalent_states())
+    automato2.create_alphabet('a b')
+    automato2.create_transition(3, 'a', 4)
+    automato2.create_transition(3, 'b', 5)
+    automato2.create_transition(4, 'a', 3)
+    automato2.create_transition(4, 'b', 4)
+    automato2.create_transition(5, 'a', 3)
+    automato2.create_transition(5, 'b', 4)
 
-
-    copy = automato.copy()
-    write_file('exemple3.txt', copy.convert_format_file())
-    automato.equivalent_states()
+    print(automato.is_equivalent(automato2))
+    # cadeia = '0'
+    # state = automato.start(cadeia)
+    #
+    # if automato.is_final(state) and not automato.error():
+    #     print('aceitou')
+    # else:
+    #     print('rejeitou')
+    #
+    # print(automato)
+    # automato.print_dict(automato.equivalent_states())
+    #
+    #
+    # copy = automato.copy()
+    # write_file('exemple3.txt', copy.convert_format_file())
+    # automato.equivalent_states()
     # automato.minimize()
