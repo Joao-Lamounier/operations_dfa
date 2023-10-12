@@ -1,7 +1,9 @@
 import copy
+from enum import Enum
 
 
 class Afd:
+    comparison_status = Enum('ComparisonStatus', ['EQUIVALENT', 'INEQUIVALENT', 'PENDENT'])
 
     def __init__(self):
         self.states = set()
@@ -11,6 +13,15 @@ class Afd:
         self.finals = set()
         self.__curr_state = None
         self.__error = False
+
+    def __str__(self):
+        states_str = f"Estados: {', '.join(map(str, self.states))}\n"
+        initial_str = f"Estado Inicial: {self.initial}\n"
+        final_str = f"Estados Finais: {', '.join(map(str, self.finals))}\n"
+        transitions_str = "Transições:\n"
+        for (start_id, symbol), end_id in self.transitions.items():
+            transitions_str += f"{start_id} --({symbol})--> {end_id}\n"
+        return states_str + initial_str + final_str + transitions_str
 
     def error(self):
         return self.__error
@@ -98,7 +109,7 @@ class Afd:
         for i in range(1, len(states_list)):
             for j in range(0, i):
                 if self.is_final(states_list[i]) != self.is_final(states_list[j]):
-                    afd_dict[i, j] = False
+                    afd_dict[i, j] = self.comparison_status.INEQUIVALENT.value
                 else:
                     afd_dict[i, j] = None
         return afd_dict
@@ -106,6 +117,7 @@ class Afd:
     def equivalent_states(self):
         afd_dict = self.__trivially_valid__()
         states_list = list(self.states)
+        cs = self.comparison_status
 
         pendent = True
         change = False
@@ -115,7 +127,7 @@ class Afd:
             for i in range(1, len(states_list)):
                 equal = True
                 for j in range(0, i):
-                    if afd_dict[i, j] is None or afd_dict[i, j] == 'pendent':
+                    if afd_dict[i, j] is None or afd_dict[i, j] == cs.PENDENT.value:
                         pendent = False
                         parts = self.alphabet.split()
                         for part in parts:
@@ -124,32 +136,39 @@ class Afd:
                             if col > row:
                                 col, row = row, col
 
-                            if col != row and afd_dict[row, col] is False:
+                            if col != row and afd_dict[row, col] is cs.INEQUIVALENT.value:
                                 equal = False
                                 change = False
-                                afd_dict[i, j] = False
+                                afd_dict[i, j] = cs.INEQUIVALENT.value
                                 break
-                            elif col != row and (afd_dict[row, col] is None or afd_dict[row, col] == 'pendent'):
+                            elif col != row and (afd_dict[row, col] is None or afd_dict[row, col] == cs.PENDENT.value):
                                 equal = False
                                 change = False
-                                afd_dict[i, j] = 'pendent'
+                                afd_dict[i, j] = cs.PENDENT.value
                                 break
                         if equal:
                             change = False
-                            afd_dict[i, j] = True
+                            afd_dict[i, j] = cs.EQUIVALENT.value
         self.not_marked(afd_dict)
         return afd_dict
 
     def not_marked(self, afd_dict):
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
-                if afd_dict[i, j] == 'pendent':
-                    afd_dict[i, j] = True
+                if afd_dict[i, j] == self.comparison_status.PENDENT.value:
+                    afd_dict[i, j] = self.comparison_status.EQUIVALENT.value
 
     def print_dict(self, afd_dict):
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
-                print(afd_dict[i, j], end=" ")
+                if afd_dict[i, j] == 1:
+                    print("E", end=" ")
+                elif afd_dict[i, j] == 2:
+                    print("NE", end=" ")
+                elif afd_dict[i, j] == 3:
+                    print("P", end=" ")
+                else:
+                    print(afd_dict[i, j], end=" ")
             print()
 
 

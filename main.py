@@ -53,6 +53,9 @@ if __name__ == '__main__':
     else:
         print('rejeitou')
 
+    print(automato)
+    automato.print_dict(automato.equivalent_states())
+
 
     copy = automato.copy()
     write_file('exemple3.txt', copy.convert_format_file())
