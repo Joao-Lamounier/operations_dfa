@@ -26,7 +26,7 @@ class Afd:
     def error(self):
         return self.__error
 
-    def curr_state(self):
+    def __curr_state(self):
         return self.__curr_state
 
     def checked_transitions(self, start_id, symbol):
@@ -79,7 +79,7 @@ class Afd:
         for value in state_values:
             self.create_state(value, final=True)
 
-    def convert_format_file(self):
+    def __convert_format_file(self):
         content = ' '.join(map(str, self.states)) + '\n'
         content += self.alphabet
 
@@ -113,7 +113,7 @@ class Afd:
                     afd_dict[i, j] = None
         return afd_dict
 
-    def equivalent_states(self):
+    def __equivalent_states(self):
         afd_dict = self.__trivially_valid()
         states_list = list(self.states)
         cs = self.comparison_status
@@ -174,7 +174,7 @@ class Afd:
 
     def minimize(self):
         self.states = self.states.symmetric_difference(self.get_disconnected())
-        afd_dict = self.equivalent_states()
+        afd_dict = self.__equivalent_states()
         state_list = list(self.states)
         cs = self.comparison_status
         mapper = dict()
@@ -226,6 +226,35 @@ class Afd:
         equivalences = afd_concat.__equivalent_states()
 
         return equivalences[y, x].name
+
+    def multiply(self, afd, mapper=dict()):
+        alphabet1 = self.alphabet.split()
+        alphabet2 = afd.alphabet.split()
+
+        if len(set(alphabet1).symmetric_difference(alphabet2)) != 0:
+            return None
+
+        afd_mul = Afd()
+        afd_mul.create_alphabet(alphabet1)
+
+        count = 1
+        for state in self.states:
+            for state2 in afd.states:
+                afd_mul.create_state(count)
+                if state is self.initial and state2 is afd.initial:
+                    afd_mul.initial = count
+                mapper[state, state2] = count
+                count += 1
+
+        for state in self.states:
+            for state2 in afd.states:
+                cur_state = mapper[state, state2]
+                for symbol in alphabet1:
+                    x = self.transitions[state, symbol]
+                    y = afd.transitions[state2, symbol]
+                    afd_mul.create_transition(cur_state, symbol, mapper[x, y])
+
+        return afd_mul
 
     @staticmethod
     def __rename_states(afd1, afd2, prefix=0):
