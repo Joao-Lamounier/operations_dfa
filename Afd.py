@@ -39,7 +39,7 @@ class Afd:
         if initial:
             self.initial = key
             self.__curr_state = self.initial
-        elif final:
+        if final:
             self.finals.add(key)
 
     def create_transition(self, origin, symbol, destin):
@@ -161,9 +161,47 @@ class Afd:
                 if afd_dict[i, j] == self.comparison_status.PENDENT:
                     afd_dict[i, j] = self.comparison_status.EQUIVALENT
 
-    # def is_connected(self):
-    #     states_cpy = self.states.copy()
-    #     for transition in self.transitions:
+    def get_disconnected(self):
+        states_cpy = self.states.copy()
+        for state in self.states:
+            for symbol in self.alphabet.split():
+                if (state, symbol) in self.transitions:
+                    rm_state = self.transitions[(state, symbol)]
+                    if rm_state in states_cpy:
+                        states_cpy.remove(rm_state)
+
+        return states_cpy
+
+    def minimize(self):
+        self.states = self.states.symmetric_difference(self.get_disconnected())
+        afd_dict = self.equivalent_states()
+        state_list = list(self.states)
+        cs = self.comparison_status
+        mapper = dict()
+
+        for i in range(1, len(state_list)):
+            for j in range(0, i):
+                if afd_dict[i, j] == cs.EQUIVALENT:
+                    rm_state, state = i, j
+                    if state_list[i] == self.initial:
+                        state, rm_state = rm_state, state
+                    mapper[state_list[rm_state]] = state_list[state]
+
+        if len(list(mapper)) == 0:
+            return
+
+        for state in self.states:
+            for symbol in self.alphabet.split():
+                key = (state, symbol)
+                if key in self.transitions:
+                    if state in mapper:
+                        self.transitions.pop(key)
+                    elif self.transitions[key] in mapper:
+                        key_map = mapper[self.transitions[key]]
+                        while key_map in mapper:
+                            key_map = mapper[key_map]
+                        self.transitions[key] = key_map
+
 
     def print_dict(self, afd_dict):
         for i in range(1, len(list(self.states))):
