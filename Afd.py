@@ -65,20 +65,19 @@ class Afd:
 
         self.alphabet = ''.join(map(str, content[1]))
 
-        aux = self.alphabet.replace(' ', '')
-        n_functions = len(self.states) * (len(aux) - 1)
+        n_functions = len(content) - 2
 
-        for i in range(2, n_functions + 2):
+        for i in range(2, n_functions):
             values = content[i].split()
             origin, symbol, destin = map(int, values)
             self.create_transition(origin, symbol, destin)
 
-        self.create_state(content[n_functions + 2], True)
+        self.create_state(content[n_functions], initial=True)
 
-        state_values = map(int, content[n_functions + 3].split())
+        state_values = map(int, content[n_functions + 1].split())
 
         for value in state_values:
-            self.create_state(value, False, True)
+            self.create_state(value, final=True)
 
     def convert_format_file(self):
         content = ' '.join(map(str, self.states)) + '\n'
@@ -103,7 +102,7 @@ class Afd:
     def copy(self):
         return copy.deepcopy(self)
 
-    def __trivially_valid__(self):
+    def __trivially_valid(self):
         afd_dict = dict()
         states_list = list(self.states)
         for i in range(1, len(states_list)):
@@ -115,7 +114,7 @@ class Afd:
         return afd_dict
 
     def equivalent_states(self):
-        afd_dict = self.__trivially_valid__()
+        afd_dict = self.__trivially_valid()
         states_list = list(self.states)
         cs = self.comparison_status
 
@@ -131,6 +130,10 @@ class Afd:
                         pendent = False
                         parts = self.alphabet.split()
                         for part in parts:
+                            if (i + 1, part) not in self.transitions or (j + 1, part) not in self.transitions:
+                                equal = False
+                                afd_dict[i, j] = cs.INEQUIVALENT
+                                break
                             row = self.transitions[i + 1, part] - 1
                             col = self.transitions[j + 1, part] - 1
                             if col > row:
@@ -149,26 +152,23 @@ class Afd:
                         if equal:
                             change = False
                             afd_dict[i, j] = cs.EQUIVALENT
-        self.not_marked(afd_dict)
+        self.__not_marked(afd_dict)
         return afd_dict
 
-    def not_marked(self, afd_dict):
+    def __not_marked(self, afd_dict):
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
                 if afd_dict[i, j] == self.comparison_status.PENDENT:
                     afd_dict[i, j] = self.comparison_status.EQUIVALENT
 
+    # def is_connected(self):
+    #     states_cpy = self.states.copy()
+    #     for transition in self.transitions:
+
     def print_dict(self, afd_dict):
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
-                if afd_dict[i, j] == 1:
-                    print("E", end=" ")
-                elif afd_dict[i, j] == 2:
-                    print("NE", end=" ")
-                elif afd_dict[i, j] == 3:
-                    print("P", end=" ")
-                else:
-                    print(afd_dict[i, j], end=" ")
+                print(afd_dict[i, j].name[0], end=" ")
             print()
 
     def is_equivalent(self, afd):
@@ -185,7 +185,7 @@ class Afd:
         x = self.__rename_states(afd_concat, self, 1)
         y = self.__rename_states(afd_concat, afd, size)
 
-        equivalences = afd_concat.equivalent_states()
+        equivalences = afd_concat.__equivalent_states()
 
         return equivalences[y, x].name
 

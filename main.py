@@ -23,32 +23,33 @@ if __name__ == '__main__':
     automato2 = Afd()
     content = read_file('exemple.txt')
 
-    # automato.load_afd(content)
+    automato.load_afd(content)
     # write_file('exemple1.txt', automato.convert_format_file())
 
-    automato.create_state(1, initial=True)
-    automato.create_state(2, final=True)
+    # automato.create_state(1, initial=True)
+    # automato.create_state(2, final=True)
+    automato.create_state(7)
+    #
+    # automato.create_alphabet('a b')
+    # automato.create_transition(1, 'a', 2)
+    # automato.create_transition(1, 'b', 1)
+    # automato.create_transition(2, 'a', 1)
+    # automato.create_transition(2, 'b', 2)
 
-    automato.create_alphabet('a b')
-    automato.create_transition(1, 'a', 2)
-    automato.create_transition(1, 'b', 1)
-    automato.create_transition(2, 'a', 1)
-    automato.create_transition(2, 'b', 2)
+    # automato2.create_alphabet('a b')
+    # automato2.create_state(3, initial=True)
+    # automato2.create_state(4, final=True)
+    # automato2.create_state(5)
+    #
+    # automato2.create_alphabet('a b')
+    # automato2.create_transition(3, 'a', 4)
+    # automato2.create_transition(3, 'b', 5)
+    # automato2.create_transition(4, 'a', 3)
+    # automato2.create_transition(4, 'b', 4)
+    # automato2.create_transition(5, 'a', 3)
+    # automato2.create_transition(5, 'b', 4)
 
-    automato2.create_alphabet('a b')
-    automato2.create_state(3, initial=True)
-    automato2.create_state(4, final=True)
-    automato2.create_state(5)
-
-    automato2.create_alphabet('a b')
-    automato2.create_transition(3, 'a', 4)
-    automato2.create_transition(3, 'b', 5)
-    automato2.create_transition(4, 'a', 3)
-    automato2.create_transition(4, 'b', 4)
-    automato2.create_transition(5, 'a', 3)
-    automato2.create_transition(5, 'b', 4)
-
-    print(automato.is_equivalent(automato2))
+    automato.print_dict(automato.equivalent_states())
     # cadeia = '0'
     # state = automato.start(cadeia)
     #
