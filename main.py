@@ -51,7 +51,7 @@ if __name__ == '__main__':
     automato2.create_transition(3, 'a', 1)
     automato2.create_transition(3, 'b', 2)
 
-    print(automato.multiply(automato2))
+    print(automato.difference(automato2))
     # cadeia = '0'
     # state = automato.start(cadeia)
     #
