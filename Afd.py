@@ -256,6 +256,48 @@ class Afd:
 
         return afd_mul
 
+    def intersection(self, afd):
+        mapper = dict()
+        afd_mul = self.multiply(afd, mapper)
+
+        if afd_mul is None:
+            return
+
+        for s in self.finals:
+            for s2 in afd.finals:
+                if (s, s2) in mapper:
+                    afd_mul.create_state(mapper[s, s2], final=True)
+
+        return afd_mul
+
+    def union(self, afd):
+        mapper = dict()
+        afd_mul = self.multiply(afd, mapper)
+
+        if afd_mul is None:
+            return
+
+        for s in self.states:
+            for s2 in afd.states:
+                if (s, s2) in mapper and self.is_final(s) or afd.is_final(s2):
+                    afd_mul.create_state(mapper[s, s2], final=True)
+
+        return afd_mul
+
+    def complement(self):
+        afd = self.copy()
+        for state in afd.states:
+            if afd.is_final(state):
+                afd.finals.remove(state)
+            else:
+                afd.create_state(state, final=True)
+
+        return afd
+
+    def difference(self, afd):
+        afd_comp = afd.complement()
+        return self.intersection(afd_comp)
+
     @staticmethod
     def __rename_states(afd1, afd2, prefix=0):
         x = 0
