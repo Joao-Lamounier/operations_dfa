@@ -1,5 +1,6 @@
 import copy
 from enum import Enum
+from queue import Queue
 
 
 class Afd:
@@ -162,18 +163,21 @@ class Afd:
                     afd_dict[i, j] = self.comparison_status.EQUIVALENT
 
     def remove_disconnected(self):
-        all_visited = set()
+        queue = Queue()
+        all_visited = list()
         alphabet = self.alphabet.split()
-        for symbol in alphabet:
-            state = self.initial
-            visited = []
-            while (state, symbol) in self.transitions and state not in visited:
-                visited.append(state)
-                all_visited.add(state)
-                state = self.transitions[(state, symbol)]
+        queue.put(self.initial)
+
+        while not queue.empty():
+            state = queue.get()
+            for symbol in self.alphabet:
+                if self.checked_transitions(state, symbol):
+                    add_state = self.transitions[state, symbol]
+                    if add_state not in all_visited:
+                        queue.put(add_state)
+                        all_visited.append(add_state)
 
         aux = self.states.difference(all_visited)
-
         for state in aux:
             for symbol in alphabet:
                 if self.checked_transitions(state, symbol):
@@ -241,7 +245,7 @@ class Afd:
         alphabet1 = set(self.alphabet.split())
         alphabet2 = afd.alphabet.split()
 
-        alph_mul = alphabet1.union(alphabet2)
+        alph_mul = f"{' '.join(map(str, alphabet1.union(alphabet2)))}"
 
         afd_mul = Afd()
         afd_mul.create_alphabet(alph_mul)
@@ -254,14 +258,20 @@ class Afd:
                     afd_mul.initial = count
                 mapper[state, state2] = count
                 count += 1
+        state_err = count
+        afd_mul.create_state(state_err)
 
         for state in self.states:
             for state2 in afd.states:
                 cur_state = mapper[state, state2]
-                for symbol in alph_mul:
-                    x = self.transitions[state, symbol]
-                    y = afd.transitions[state2, symbol]
-                    afd_mul.create_transition(cur_state, symbol, mapper[x, y])
+                for symbol in alph_mul.split():
+                    afd_mul.create_transition(state_err, symbol, state_err)
+                    destin = state_err
+                    if self.checked_transitions(state, symbol) and afd.checked_transitions(state2, symbol):
+                        x = self.transitions[state, symbol]
+                        y = afd.transitions[state2, symbol]
+                        destin = mapper[x, y]
+                    afd_mul.create_transition(cur_state, symbol, destin)
 
         afd_mul.remove_disconnected()
         return afd_mul
