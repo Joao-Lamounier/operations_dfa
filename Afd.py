@@ -1,5 +1,6 @@
 import copy
 from enum import Enum
+from queue import Queue
 
 
 class Afd:
@@ -161,19 +162,33 @@ class Afd:
                 if afd_dict[i, j] == self.comparison_status.PENDENT:
                     afd_dict[i, j] = self.comparison_status.EQUIVALENT
 
-    def get_disconnected(self):
-        states_cpy = self.states.copy()
-        for state in self.states:
-            for symbol in self.alphabet.split():
-                if (state, symbol) in self.transitions:
-                    rm_state = self.transitions[(state, symbol)]
-                    if rm_state in states_cpy:
-                        states_cpy.remove(rm_state)
+    def remove_disconnected(self):
+        queue = Queue()
+        all_visited = list()
+        alphabet = self.alphabet.split()
+        queue.put(self.initial)
 
-        return states_cpy
+        while not queue.empty():
+            state = queue.get()
+            for symbol in self.alphabet:
+                if self.checked_transitions(state, symbol):
+                    add_state = self.transitions[state, symbol]
+                    if add_state not in all_visited:
+                        queue.put(add_state)
+                        all_visited.append(add_state)
+
+        aux = self.states.difference(all_visited)
+        for state in aux:
+            for symbol in alphabet:
+                if self.checked_transitions(state, symbol):
+                    self.transitions.pop((state, symbol))
+
+        self.states = self.states.difference(aux)
+        self.finals = self.finals.difference(aux)
 
     def minimize(self):
-        self.states = self.states.symmetric_difference(self.get_disconnected())
+        self.remove_disconnected()
+
         afd_dict = self.__equivalent_states()
         state_list = list(self.states)
         cs = self.comparison_status
@@ -202,7 +217,6 @@ class Afd:
                             key_map = mapper[key_map]
                         self.transitions[key] = key_map
 
-
     def print_dict(self, afd_dict):
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
@@ -228,14 +242,13 @@ class Afd:
         return equivalences[y, x].name
 
     def multiply(self, afd, mapper=dict()):
-        alphabet1 = self.alphabet.split()
+        alphabet1 = set(self.alphabet.split())
         alphabet2 = afd.alphabet.split()
 
-        if len(set(alphabet1).symmetric_difference(alphabet2)) != 0:
-            return None
+        alph_mul = f"{' '.join(map(str, alphabet1.union(alphabet2)))}"
 
         afd_mul = Afd()
-        afd_mul.create_alphabet(alphabet1)
+        afd_mul.create_alphabet(alph_mul)
 
         count = 1
         for state in self.states:
@@ -245,15 +258,22 @@ class Afd:
                     afd_mul.initial = count
                 mapper[state, state2] = count
                 count += 1
+        state_err = count
+        afd_mul.create_state(state_err)
 
         for state in self.states:
             for state2 in afd.states:
                 cur_state = mapper[state, state2]
-                for symbol in alphabet1:
-                    x = self.transitions[state, symbol]
-                    y = afd.transitions[state2, symbol]
-                    afd_mul.create_transition(cur_state, symbol, mapper[x, y])
+                for symbol in alph_mul.split():
+                    afd_mul.create_transition(state_err, symbol, state_err)
+                    destin = state_err
+                    if self.checked_transitions(state, symbol) and afd.checked_transitions(state2, symbol):
+                        x = self.transitions[state, symbol]
+                        y = afd.transitions[state2, symbol]
+                        destin = mapper[x, y]
+                    afd_mul.create_transition(cur_state, symbol, destin)
 
+        afd_mul.remove_disconnected()
         return afd_mul
 
     def intersection(self, afd):
