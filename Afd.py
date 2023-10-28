@@ -161,19 +161,30 @@ class Afd:
                 if afd_dict[i, j] == self.comparison_status.PENDENT:
                     afd_dict[i, j] = self.comparison_status.EQUIVALENT
 
-    def get_disconnected(self):
-        states_cpy = self.states.copy()
-        for state in self.states:
-            for symbol in self.alphabet.split():
-                if (state, symbol) in self.transitions:
-                    rm_state = self.transitions[(state, symbol)]
-                    if rm_state in states_cpy:
-                        states_cpy.remove(rm_state)
+    def remove_disconnected(self):
+        all_visited = set()
+        alphabet = self.alphabet.split()
+        for symbol in alphabet:
+            state = self.initial
+            visited = []
+            while (state, symbol) in self.transitions and state not in visited:
+                visited.append(state)
+                all_visited.add(state)
+                state = self.transitions[(state, symbol)]
 
-        return states_cpy
+        aux = self.states.difference(all_visited)
+
+        for state in aux:
+            for symbol in alphabet:
+                if self.checked_transitions(state, symbol):
+                    self.transitions.pop((state, symbol))
+
+        self.states = self.states.difference(aux)
+        self.finals = self.finals.difference(aux)
 
     def minimize(self):
-        self.states = self.states.symmetric_difference(self.get_disconnected())
+        self.remove_disconnected()
+
         afd_dict = self.__equivalent_states()
         state_list = list(self.states)
         cs = self.comparison_status
@@ -202,7 +213,6 @@ class Afd:
                             key_map = mapper[key_map]
                         self.transitions[key] = key_map
 
-
     def print_dict(self, afd_dict):
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
@@ -228,14 +238,13 @@ class Afd:
         return equivalences[y, x].name
 
     def multiply(self, afd, mapper=dict()):
-        alphabet1 = self.alphabet.split()
+        alphabet1 = set(self.alphabet.split())
         alphabet2 = afd.alphabet.split()
 
-        if len(set(alphabet1).symmetric_difference(alphabet2)) != 0:
-            return None
+        alph_mul = alphabet1.union(alphabet2)
 
         afd_mul = Afd()
-        afd_mul.create_alphabet(alphabet1)
+        afd_mul.create_alphabet(alph_mul)
 
         count = 1
         for state in self.states:
@@ -249,11 +258,12 @@ class Afd:
         for state in self.states:
             for state2 in afd.states:
                 cur_state = mapper[state, state2]
-                for symbol in alphabet1:
+                for symbol in alph_mul:
                     x = self.transitions[state, symbol]
                     y = afd.transitions[state2, symbol]
                     afd_mul.create_transition(cur_state, symbol, mapper[x, y])
 
+        afd_mul.remove_disconnected()
         return afd_mul
 
     def intersection(self, afd):
