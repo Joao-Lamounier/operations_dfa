@@ -5,6 +5,7 @@ from queue import Queue
 from lxml import etree
 from datetime import datetime
 
+
 class Afd:
     comparison_status = Enum('ComparisonStatus', ['EQUIVALENT', 'INEQUIVALENT', 'PENDENT'])
 
