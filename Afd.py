@@ -1,8 +1,8 @@
 import copy
 import datetime
+import xml.dom.minidom
 from enum import Enum
 from queue import Queue
-from lxml import etree
 from datetime import datetime
 
 
@@ -63,7 +63,13 @@ class Afd:
     def is_final(self, id) -> bool:
         return id in self.finals
 
-    def load_afd(self, content):
+    def load(self, file_name):
+        try:
+            with open(file_name, 'r') as file:
+                content = file.readlines()
+        except FileNotFoundError:
+            raise FileNotFoundError(f'O arquivo "{file_name}" não foi encontrado.')
+
         state_values = map(int, content[0].split())
 
         for value in state_values:
@@ -85,81 +91,7 @@ class Afd:
         for value in state_values:
             self.create_state(value, final=True)
 
-    def load_jflap(self, file_name):
-        tree = etree.parse(file_name)
-        root = tree.getroot()
-
-        automaton = root.find('automaton')
-        states = automaton.findall('state')
-
-        for state in states:
-            id = int(state.get('id'))
-            self.create_state(id)
-            if state.find('initial') is not None:
-                self.initial = id
-            if state.find('final') is not None:
-                self.finals.add(id)
-
-        transitions = automaton.findall('transition')
-        alphabet = list()
-
-        for transition in transitions:
-            origin = int(transition.find('from').text)
-            destin = int(transition.find('to').text)
-            symbol = str(transition.find('read').text)
-            if symbol not in alphabet:
-                alphabet.append(symbol)
-            self.create_transition(origin, symbol, destin, check_alph=False)
-
-        self.create_alphabet(' '.join(map(str, alphabet)))
-
-    def save_jflap(self):
-        root = etree.Element("structure")
-        type_tag = etree.SubElement(root, "type")
-        type_tag.text = "fa"
-        automaton = etree.SubElement(root, "automaton")
-        position = 100
-        x, y = position, position
-
-        for i, state in enumerate(self.states):
-            id = str(state)
-            name = "q" + id
-
-            state_tag = etree.SubElement(automaton, "state", id=id, name=name)
-
-            if x % 500 == 0:
-                x = position
-                y += position
-            else:
-                x = position * ((i + 1) % 5)
-
-            x_tag = etree.SubElement(state_tag, "x")
-            y_tag = etree.SubElement(state_tag, "y")
-            x_tag.text, y_tag.text = str(x), str(y)
-
-            if self.initial == state:
-                etree.SubElement(state_tag, "initial")
-            if state in self.finals:
-                etree.SubElement(state_tag, "final")
-
-        for state in self.states:
-            for symbol in self.alphabet.split():
-                if not self.checked_transitions(state, symbol):
-                    break
-                transition = etree.SubElement(automaton, "transition")
-                from_tag = etree.SubElement(transition, "from")
-                from_tag.text = str(state)
-                to_tag = etree.SubElement(transition, "to")
-                to_tag.text = str(self.transitions[state, symbol])
-                read_tag = etree.SubElement(transition, "read")
-                read_tag.text = symbol
-
-        tree = etree.ElementTree(root)
-        date = datetime.now()
-        file_name = date.strftime("%Y%m%d%H%M%S") + '.jff'
-        tree.write(file_name, pretty_print=True, encoding="utf-8", standalone=False)
-
-    def __convert_format_file(self):
+    def save(self, file_name):
         content = ' '.join(map(str, self.states)) + '\n'
         content += self.alphabet
 
@@ -169,7 +101,12 @@ class Afd:
 
         content += str(self.initial) + '\n'
         content += ' '.join(map(str, self.finals)) + '\n'
-        return content
+
+        try:
+            with open(file_name, 'w') as file:
+                file.write(content)
+        except Exception:
+            raise print(f'Não foi possível escrever em "{file_name}"')
 
     def start(self, word):
         for symbol in word:
