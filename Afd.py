@@ -4,6 +4,7 @@ import xml.dom.minidom
 from enum import Enum
 from queue import Queue
 from datetime import datetime
+from xml.dom.minidom import parse, parseString
 
 
 class Afd:
@@ -91,9 +92,11 @@ class Afd:
         for value in state_values:
             self.create_state(value, final=True)
 
-    def save(self, file_name):
+    def save(self):
+        date = datetime.now()
+        file_name = date.strftime("%Y%m%d%H%M%S") + '.txt'
         content = ' '.join(map(str, self.states)) + '\n'
-        content += self.alphabet
+        content += self.alphabet + '\n'
 
         for key, value in self.transitions.items():
             transitions = f"{key[0]} {key[1]} {value}\n"
@@ -233,7 +236,8 @@ class Afd:
                             key_map = mapper[key_map]
                         self.transitions[key] = key_map
 
-    def print_dict(self, afd_dict):
+    def print_dict(self):
+        afd_dict = self.__equivalent_states()
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
                 print(afd_dict[i, j].name[0], end=" ")

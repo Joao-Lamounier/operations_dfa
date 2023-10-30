@@ -133,7 +133,7 @@ class JFlap:
         root.appendChild(type_tag)
 
         automaton_tag = doc.createElement("automaton")
-        root.appendChild(automaton)
+        root.appendChild(automaton_tag)
 
         create_states_nodes()
         create_transitions_nodes()
