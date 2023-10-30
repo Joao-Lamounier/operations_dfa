@@ -1,6 +1,10 @@
 import copy
+import datetime
+import xml.dom.minidom
 from enum import Enum
 from queue import Queue
+from datetime import datetime
+from xml.dom.minidom import parse, parseString
 
 
 class Afd:
@@ -43,11 +47,13 @@ class Afd:
         if final:
             self.finals.add(key)
 
-    def create_transition(self, origin, symbol, destin):
+    def create_transition(self, origin, symbol, destin, check_alph=True):
         symbol = str(symbol)
         origin = int(origin)
         destin = int(destin)
-        if symbol not in self.alphabet or origin not in self.states or destin not in self.states:
+        if check_alph and symbol not in self.alphabet:
+            return False
+        if origin not in self.states or destin not in self.states:
             return False
         self.transitions[origin, symbol] = destin
         return True
@@ -58,7 +64,13 @@ class Afd:
     def is_final(self, id) -> bool:
         return id in self.finals
 
-    def load_afd(self, content):
+    def load(self, file_name):
+        try:
+            with open(file_name, 'r') as file:
+                content = file.readlines()
+        except FileNotFoundError:
+            raise FileNotFoundError(f'O arquivo "{file_name}" não foi encontrado.')
+
         state_values = map(int, content[0].split())
 
         for value in state_values:
@@ -80,9 +92,11 @@ class Afd:
         for value in state_values:
             self.create_state(value, final=True)
 
-    def __convert_format_file(self):
+    def save(self):
+        date = datetime.now()
+        file_name = date.strftime("%Y%m%d%H%M%S") + '.txt'
         content = ' '.join(map(str, self.states)) + '\n'
-        content += self.alphabet
+        content += self.alphabet + '\n'
 
         for key, value in self.transitions.items():
             transitions = f"{key[0]} {key[1]} {value}\n"
@@ -90,7 +104,12 @@ class Afd:
 
         content += str(self.initial) + '\n'
         content += ' '.join(map(str, self.finals)) + '\n'
-        return content
+
+        try:
+            with open(file_name, 'w') as file:
+                file.write(content)
+        except Exception:
+            raise print(f'Não foi possível escrever em "{file_name}"')
 
     def start(self, word):
         for symbol in word:
@@ -217,7 +236,8 @@ class Afd:
                             key_map = mapper[key_map]
                         self.transitions[key] = key_map
 
-    def print_dict(self, afd_dict):
+    def print_dict(self):
+        afd_dict = self.__equivalent_states()
         for i in range(1, len(list(self.states))):
             for j in range(0, i):
                 print(afd_dict[i, j].name[0], end=" ")
