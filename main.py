@@ -164,6 +164,15 @@ def menu_option(option):
         afd = automatos[i].copy()
         automatos.append(afd)
         print(f"Automato copiado: {len(automatos) - 1}")
+    elif option == 19:
+        i = select_automaton()
+        word = input('Insira a cadeia: ')
+        state = automatos[i].start(word)
+        automatos[i].init()
+        if automatos[i].is_final(state) and not automatos[i].error():
+            print(f'Aceita {word}')
+        else:
+            print(f'Rejeita {word}')
 
 
 if __name__ == '__main__':
@@ -191,6 +200,7 @@ if __name__ == '__main__':
             "│16 - Salvar Autômato                    │\n"
             "│17 - Carregar Autômato                  │\n"
             "│18 - Copiar Autômato                    │\n"
+            "│19 - Inserir cadeia                     │\n"
             "│ 0 - Sair                               │\n"
             "╰────────────────────────────────────────╯\n"
         )

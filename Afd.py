@@ -354,3 +354,7 @@ class Afd:
                 afd1.create_transition(i + prefix, symbol, destin)
 
         return x
+
+    def init(self) -> None:
+        self.__error = False
+        self.__curr_state = self.initial
