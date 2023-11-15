@@ -153,12 +153,14 @@ def menu_option(option):
             automatos[i].save()
     elif option == 17:
         file_option = select_file_type()
-        i = select_automaton()
         file_name = input('Insira o nome do arquivo: ')
         if file_option == 1:
-            JFlap.load(file_name)
+            automatos.append(JFlap.load(file_name))
         elif file_option == 2:
-            automatos[i].load(file_name)
+            afd = Afd()
+            afd.load(file_name)
+            automatos.append(afd)
+        print(f"Automato carregado: {len(automatos) - 1}")
     elif option == 18:
         i = select_automaton()
         afd = automatos[i].copy()

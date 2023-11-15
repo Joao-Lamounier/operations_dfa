@@ -82,7 +82,8 @@ class Afd:
 
         for i in range(2, n_functions):
             values = content[i].split()
-            origin, symbol, destin = map(int, values)
+            origin, symbol, destin = values
+            origin, destin = int(origin), int(destin)
             self.create_transition(origin, symbol, destin)
 
         self.create_state(content[n_functions], initial=True)
