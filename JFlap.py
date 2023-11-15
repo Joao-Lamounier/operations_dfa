@@ -31,7 +31,8 @@ class JFlap:
                 automaton.create_transition(origin, symbol, destin, check_alph=False)
 
         doc = xml.dom.minidom.parse(file_name)
-        automaton_tag = doc.getElementsByTagName('automaton')[0]
+        structure = doc.getElementsByTagName('structure')[0]
+        automaton_tag = structure.getElementsByTagName('automaton')[0]
         alphabet = set()
 
         automaton = Afd()
@@ -56,11 +57,12 @@ class JFlap:
                 state_tag.setAttribute("name", name)
 
             def get_state_position(cur_x: int, cur_y: int):
-                if cur_x % 500 == 0:
+                t = ((i + 1) % 5)
+                if t == 0:
                     cur_x = base_position
                     cur_y += base_position
                 else:
-                    cur_x = base_position * ((i + 1) % 5)
+                    cur_x += base_position
 
                 return cur_x, cur_y
 
@@ -86,11 +88,13 @@ class JFlap:
             x, y = initialize_states_position()
             for i, state in enumerate(automaton.states):
                 state_tag = doc.createElement("state")
+
                 create_state_attr()
+
                 automaton_tag.appendChild(state_tag)
+                create_coordinated_nodes()
 
                 x, y = get_state_position(x, y)
-                create_coordinated_nodes()
 
                 set_initial_state_node()
                 set_final_state_node()
@@ -113,15 +117,13 @@ class JFlap:
 
             for state in automaton.states:
                 for symbol in automaton.alphabet.split():
-                    if not automaton.checked_transitions(state, symbol):
-                        break
+                    if automaton.checked_transitions(state, symbol):
+                        transition = doc.createElement("transition")
+                        automaton_tag.appendChild(transition)
 
-                    transition = doc.createElement("transition")
-                    automaton_tag.appendChild(transition)
-
-                    create_from_node()
-                    create_to_node()
-                    create_read_node()
+                        create_from_node()
+                        create_to_node()
+                        create_read_node()
         
         doc = xml.dom.minidom.Document()
 
